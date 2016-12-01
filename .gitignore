@@ -1,0 +1,8 @@
+Makefile
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+kiv-pd-vtpbuddy
+
+# old sources, not added to repository
+src-old/
