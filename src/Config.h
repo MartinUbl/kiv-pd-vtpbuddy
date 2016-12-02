@@ -11,6 +11,8 @@ enum ConfigOpts
 {
     CONF_MODE       = 0,
     CONF_INTERFACE  = 1,
+    CONF_ENCAPS     = 2,
+    CONF_VTP_VERSION    = 3,
     MAX_CONF_OPT
 };
 
@@ -18,6 +20,7 @@ enum ConfigOptType
 {
     CONF_OPT_TYPE_INT       = 0,
     CONF_OPT_TYPE_STRING    = 1,
+    CONF_OPT_TYPE_ENUM      = 2,
     MAX_CONF_OPT_TYPE
 };
 
@@ -51,9 +54,12 @@ class ConfigMgr
         ConfigStoredOpt* _FindConfigOpt(const char* name);
 
         void _InitConfigIntValue(ConfigOpts opt, const char* name, int value);
+        void _InitConfigEnumValue(ConfigOpts opt, const char* name, int value);
         void _SetConfigIntValue(ConfigOpts opt, int value, bool initialized = false);
         void _InitConfigStringValue(ConfigOpts opt, const char* name, const char* value);
         void _SetConfigStringValue(ConfigOpts opt, const char* value, bool initialized = false);
+
+        int64_t _ParseEnumValue(std::string str);
 
     private:
         ConfigStoredOpt m_options[MAX_CONF_OPT];

@@ -1,16 +1,15 @@
 #ifndef VTPBUDDY_VTPSTRUCTS_H
 #define VTPBUDDY_VTPSTRUCTS_H
 
-#define SNAP_8023_OFFSET 14
-#define SNAP_ETHERNETII_OFFSET 18
-#define SNAP_DSAP_SSAP_IDENTIFIER 0xAAAA
+#include "EthernetStructs.h"
+
+#define SNAP_NOT_TAGGED_OFFSET 14
+#define SNAP_TAGGED_OFFSET 18
 
 // TODO: find proper values
 #define VTP_ID_OFFSET 6
 #define VTP_VERSION_OFFSET 8
 #define VTP_MSGTYPE_OFFSET 9
-
-#define VTP_IDENTIFIER 0x2003
 
 // VTP message codes
 enum VTPMsgCode
@@ -25,7 +24,6 @@ enum VTPMsgCode
 
 // domain name field length
 #define MAX_VTP_DOMAIN_LENGTH 32
-
 
 #define VTP_TIMESTAMP_LENGTH 12
 #define VTP_MD5_LENGTH 16
@@ -86,8 +84,5 @@ struct SubsetVLANInfoBody
 //#pragma scalar_storage_order default
 
 #pragma pack(pop)
-
-template<typename T> void ToNetworkEndianity(T* pkt);
-template<typename T> void ToHostEndianity(T* pkt);
 
 #endif

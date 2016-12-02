@@ -23,7 +23,7 @@ VTPDomain* DomainMgr::CreateDomain(const char* name, const char* password)
 
     m_domainMap[name] = new VTPDomain(name, password);
 
-    return nullptr;
+    return m_domainMap[name];
 }
 
 DomainMap const& DomainMgr::GetDomainMap() const

@@ -2,6 +2,8 @@
 #include "PacketHandler.h"
 #include "VTPStructs.h"
 #include "DomainMgr.h"
+#include "VTPFieldValues.h"
+#include "Network.h"
 
 #include <arpa/inet.h>
 
@@ -82,10 +84,10 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
     // TODO: recognize ISL vs. 802.1Q
     //       ISL could be identified by destination multicast address of 01:00:0C:00:00:00
 
-    if (_ReadU16(buffer, SNAP_8023_OFFSET) == SNAP_DSAP_SSAP_IDENTIFIER)
-        base_offset = SNAP_8023_OFFSET;
-    else if (_ReadU16(buffer, SNAP_ETHERNETII_OFFSET) == SNAP_DSAP_SSAP_IDENTIFIER)
-        base_offset = SNAP_ETHERNETII_OFFSET;
+    if (_ReadU16(buffer, SNAP_NOT_TAGGED_OFFSET) == SNAP_DSAP_SSAP_IDENTIFIER)
+        base_offset = SNAP_NOT_TAGGED_OFFSET;
+    else if (_ReadU16(buffer, SNAP_TAGGED_OFFSET) == SNAP_DSAP_SSAP_IDENTIFIER)
+        base_offset = SNAP_TAGGED_OFFSET;
     else
         return;
 

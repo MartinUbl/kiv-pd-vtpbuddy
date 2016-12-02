@@ -9,4 +9,10 @@ enum OperationMode
     MAX_OM
 };
 
+enum VTPEncapsulation
+{
+    ENCAPS_ISL      = 0,        // Inter-Switch Link protocol
+    ENCAPS_DOT1Q    = 1,        // 802.1Q protocol
+};
+
 #endif

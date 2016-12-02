@@ -3,8 +3,25 @@
 
 #include "Singleton.h"
 
+#include "VTPStructs.h"
+
 #include <net/if.h>
 #include <thread>
+
+/**
+ * Prepared packet structure - used when sending packets
+ */
+struct PreparedPacket
+{
+    VTPHeader header;
+
+    uint8_t* data;
+    size_t data_len;
+
+    bool tagged;
+
+    static PreparedPacket* Prepare(uint8_t _vtp_code, size_t _data_len, std::string _domain_name);
+};
 
 // maximum buffer size for received frames/packets
 #define NET_BUFFER_SIZE 65536
@@ -23,6 +40,9 @@ class VTPNetwork
         void StartListener();
         // Terminates networking, listener thread, cleans up
         void Terminate();
+
+        // Sends previously prepared packet
+        void SendPreparedPacket(PreparedPacket* pkt);
 
     protected:
         // protected singleton constructor
@@ -45,5 +65,8 @@ class VTPNetwork
 };
 
 #define sNetwork Singleton<VTPNetwork>::getInstance()
+
+template<typename T> void ToNetworkEndianity(T* pkt);
+template<typename T> void ToHostEndianity(T* pkt);
 
 #endif

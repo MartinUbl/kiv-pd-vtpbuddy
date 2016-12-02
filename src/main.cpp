@@ -2,6 +2,7 @@
 #include "Config.h"
 #include "Network.h"
 #include "DomainMgr.h"
+#include "RuntimeGlobals.h"
 
 #include <sstream>
 #include <signal.h>
@@ -72,7 +73,6 @@ bool process_command(std::string &comm)
         }
         else
         {
-
             std::cout << "Subcommands available:" << std::endl;
             std::cout << "      list    lists all available domains" << std::endl;
             std::cout << "      vlans   lists all vlans within domain" << std::endl;
@@ -107,6 +107,8 @@ int main(int argc, char** argv)
     // initialize network
     if (!sNetwork->InitSocket(sConfig->GetConfigStringValue(CONF_INTERFACE)))
         return 2;
+
+    sRuntimeGlobals->InitOutputEncapsulation();
 
     sNetwork->StartListener();
 

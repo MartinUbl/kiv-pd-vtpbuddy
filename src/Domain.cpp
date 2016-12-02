@@ -1,6 +1,8 @@
 #include "general.h"
 #include "Domain.h"
 #include "VLAN.h"
+#include "Network.h"
+#include "VTPStructs.h"
 
 VTPDomain::VTPDomain(const char* name, const char* password)
 {
@@ -89,7 +91,14 @@ void VTPDomain::HandleSummaryAdvert(SummaryAdvertPacketBody* pkt, uint8_t follow
         // if there's no subset advert following this packet, ask for it using advert request
         if (followers == 0)
         {
-            // TODO: send advert request
+            std::cout << "Sending advert request" << std::endl;
+            PreparedPacket* reqpkt = PreparedPacket::Prepare(VTP_MSG_ADVERT_REQUEST, sizeof(AdvertRequestPacketBody), GetName());
+
+            AdvertRequestPacketBody* bd = (AdvertRequestPacketBody*)reqpkt->data;
+            bd->start_revision = pkt->revision;
+
+            ToNetworkEndianity(bd);
+            sNetwork->SendPreparedPacket(reqpkt);
         }
     }
 }

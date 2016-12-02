@@ -14,12 +14,31 @@ void ConfigMgr::InitDefaults()
 {
     _InitConfigIntValue(CONF_MODE, "mode", OM_SERVER);
     _InitConfigStringValue(CONF_INTERFACE, "interface", "eth1");
+    _InitConfigEnumValue(CONF_ENCAPS, "encapsulation", ENCAPS_DOT1Q);
+    _InitConfigIntValue(CONF_VTP_VERSION, "vtp_version", 2);
+}
+
+int64_t ConfigMgr::_ParseEnumValue(std::string str)
+{
+    if (str == "isl")
+        return ENCAPS_ISL;
+    if (str == "dot1q")
+        return ENCAPS_DOT1Q;
+
+    return -1;
 }
 
 void ConfigMgr::_InitConfigIntValue(ConfigOpts opt, const char* name, int value)
 {
     m_options[opt].name = name;
     _SetConfigIntValue(opt, value, false);
+}
+
+void ConfigMgr::_InitConfigEnumValue(ConfigOpts opt, const char* name, int value)
+{
+    m_options[opt].name = name;
+    _SetConfigIntValue(opt, value, false);
+    m_options[opt].type = CONF_OPT_TYPE_ENUM;
 }
 
 void ConfigMgr::_SetConfigIntValue(ConfigOpts opt, int value, bool initialized)
@@ -46,7 +65,7 @@ void ConfigMgr::_SetConfigStringValue(ConfigOpts opt, const char* value, bool in
 
 int64_t ConfigMgr::GetConfigIntValue(ConfigOpts opt)
 {
-    if (m_options[opt].type != CONF_OPT_TYPE_INT)
+    if (m_options[opt].type != CONF_OPT_TYPE_INT && m_options[opt].type != CONF_OPT_TYPE_ENUM)
         return 0;
     return m_options[opt].intValue;
 }
@@ -128,7 +147,6 @@ bool ConfigMgr::LoadConfig()
 
         if (ifs.is_open())
         {
-            std::cout << "Config found" << std::endl;
             std::string line, name, value;
 
             while (ifs.good() && std::getline(ifs, line))
@@ -155,6 +173,14 @@ bool ConfigMgr::LoadConfig()
                     }
 
                     _SetConfigIntValue(opt->opt, tval, true);
+                }
+                else if (opt->type == CONF_OPT_TYPE_ENUM)
+                {
+                    int64_t tval = _ParseEnumValue(value);
+                    if (tval >= 0)
+                        _SetConfigIntValue(opt->opt, tval, true);
+                    else
+                        std::cerr << "Invalid enum value '" << value.c_str() << "' for option: " << name.c_str() << std::endl;
                 }
                 else if (opt->type == CONF_OPT_TYPE_STRING)
                     _SetConfigStringValue(opt->opt, value.c_str(), true);
