@@ -4,6 +4,8 @@
 #include "Singleton.h"
 #include "Domain.h"
 
+typedef std::map<std::string, VTPDomain*> DomainMap;
+
 class DomainMgr
 {
     friend class Singleton<DomainMgr>;
@@ -11,11 +13,13 @@ class DomainMgr
         VTPDomain* GetDomainByName(const char* name);
         VTPDomain* CreateDomain(const char* name, const char* password = nullptr);
 
+        DomainMap const& GetDomainMap() const;
+
     protected:
         DomainMgr();
 
     private:
-        std::map<std::string, VTPDomain*> m_domainMap;
+        DomainMap m_domainMap;
 };
 
 #define sDomainMgr Singleton<DomainMgr>::getInstance()

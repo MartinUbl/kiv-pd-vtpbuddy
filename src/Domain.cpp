@@ -7,6 +7,12 @@ VTPDomain::VTPDomain(const char* name, const char* password)
     m_name = name;
     m_password = password ? password : "";
     m_currentRevision = 0;
+    m_lastSubsetSequenceNumber = 1;
+}
+
+const char* VTPDomain::GetName() const
+{
+    return m_name.c_str();
 }
 
 VLANRecord* VTPDomain::GetVLANByName(const char* name)
@@ -54,6 +60,11 @@ void VTPDomain::RemoveVLAN(uint16_t id)
     m_vlans.erase(id);
 }
 
+VLANMap const& VTPDomain::GetVLANMap() const
+{
+    return m_vlans;
+}
+
 void VTPDomain::_ReduceVLANSet(std::set<uint16_t> const &vlanSet)
 {
     std::set<uint16_t> toRemove;
@@ -65,14 +76,21 @@ void VTPDomain::_ReduceVLANSet(std::set<uint16_t> const &vlanSet)
     }
 
     for (uint16_t vlanId : toRemove)
+    {
+        std::cout << "Removing VLAN " << vlanId << std::endl;
         RemoveVLAN(vlanId);
+    }
 }
 
 void VTPDomain::HandleSummaryAdvert(SummaryAdvertPacketBody* pkt, uint8_t followers)
 {
     if (pkt->revision > m_currentRevision)
     {
-        //
+        // if there's no subset advert following this packet, ask for it using advert request
+        if (followers == 0)
+        {
+            // TODO: send advert request
+        }
     }
 }
 
@@ -81,6 +99,7 @@ void VTPDomain::HandleSubsetAdvert(SubsetAdvertPacketBody* pkt, uint8_t sequence
     if (pkt->revision > m_currentRevision)
     {
         SubsetVLANInfoBody* cur;
+        VLANRecord* vlan;
         std::string name;
         std::vector<SubsetVLANInfoBody*> readVlans;
         std::set<uint16_t> vlanIds;
@@ -92,12 +111,28 @@ void VTPDomain::HandleSubsetAdvert(SubsetAdvertPacketBody* pkt, uint8_t sequence
             ToHostEndianity(cur);
 
             name = std::string((const char*)&cur->data, (size_t)cur->name_length);
-            std::cout << "VLAN: " << name.c_str() << "(" << cur->isl_vlan_id << ")" << std::endl;
 
             vlanIds.insert(cur->isl_vlan_id);
 
+            vlan = GetVLANById(cur->isl_vlan_id);
+            if (!vlan)
+            {
+                AddVLAN(cur->isl_vlan_id, cur->type, cur->index80210, name.c_str());
+                std::cout << "Adding VLAN: " << name.c_str() << " (" << cur->isl_vlan_id << ")" << std::endl;
+            }
+            else
+            {
+                UpdateVLAN(cur->isl_vlan_id, cur->type, cur->index80210, name.c_str());
+                std::cout << "Updating VLAN: " << name.c_str() << " (" << vlan->name.c_str() << " - " << cur->isl_vlan_id << ")" << std::endl;
+            }
+
             offset += cur->length;
         }
+
+        _ReduceVLANSet(vlanIds);
+
+        // update local revision number
+        m_currentRevision = pkt->revision;
     }
 }
 
