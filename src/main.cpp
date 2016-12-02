@@ -25,6 +25,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    // TODO: load already listed domains, after saving is done
+
     // initialize network
     if (!sNetwork->InitSocket(sConfig->GetConfigStringValue(CONF_INTERFACE)))
         return 2;

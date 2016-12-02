@@ -8,7 +8,7 @@ SET(CPACK_PACKAGE_NAME "vtpbuddy")
 SET(CPACK_PACKAGE_VERSION "1.0-dev")
 INCLUDE(CPack)
 
-ADD_DEFINITIONS(--std=c++11)
+ADD_DEFINITIONS(--std=c++11 -g)
 
 FILE(GLOB tmp_src
 	src/*.h
