@@ -94,14 +94,9 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
     if (_ReadU16(buffer, base_offset + VTP_ID_OFFSET) != VTP_IDENTIFIER)
         return;
 
-    // TODO: proper logging
-    //std::cout << "Received VTP version " << (int)version << " packet" << std::endl;
-
     VTPHeader* hdr = (VTPHeader*)&buffer[base_offset + VTP_VERSION_OFFSET];
 
-    //std::cout << "Version: " << (int)hdr->version << ", code: " << (int)hdr->code << ", domain_len: " << (int)hdr->domain_len << ", domain: " << hdr->domain_name << std::endl;
-    //std::cout << "Sequence number: " << (int)hdr->sequence_nr << std::endl;
-
+    // find domain
     std::string domName((const char*)hdr->domain_name, (size_t)hdr->domain_len);
     VTPDomain* domain = sDomainMgr->GetDomainByName(domName.c_str());
     if (!domain)
@@ -111,9 +106,10 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
         std::cout << "TEMP: Creating domain " << domName.c_str() << std::endl;
     }
 
-    // frame length is stored in previous 2 bytes (both 802.3 Ethernet and Ethernet II)
+    // frame length is stored in previous 2 bytes (when using 802.1Q, frame header "tail" is the same as 802.3 Ethernet)
     uint16_t frameLength = _ReadU16(buffer, base_offset - 2);
 
+    // disambiguate using VTP message code
     switch (hdr->code)
     {
         case VTP_MSG_SUMMARY_ADVERT:

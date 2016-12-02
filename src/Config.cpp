@@ -84,19 +84,24 @@ bool ConfigMgr::_ParseConfigOpt(const std::string line, std::string &name, std::
     bool firstpass = true;
     int first = -1, last = -1;
 
+    // go through whole line
     for (int i = 0; i < line.length(); i++)
     {
+        // ignore spaces
         if (ln[i] == ' ')
             continue;
 
+        // set first non-space character index when not set
         if (first == -1)
         {
+            // if it's comment, ignore
             if (ln[i] == '#')
                 return false;
 
             first = i;
         }
 
+        // "=" sign stores everything parsed until now and resets parser to second pass
         if (ln[i] == '=' && firstpass)
         {
             name = std::string(&ln[first], last - first + 1);
@@ -105,9 +110,11 @@ bool ConfigMgr::_ParseConfigOpt(const std::string line, std::string &name, std::
             firstpass = false;
         }
 
+        // always store last valid character
         last = i;
     }
 
+    // if no second pass ever started on this line, it's considered error
     if (firstpass)
     {
         if (first != -1)
@@ -115,8 +122,11 @@ bool ConfigMgr::_ParseConfigOpt(const std::string line, std::string &name, std::
         return false;
     }
 
+    // if the value was entered, store it
     if (first != -1)
         value = std::string(&ln[first], last - first + 1);
+    else
+        value = "";
 
     return true;
 }
@@ -149,11 +159,14 @@ bool ConfigMgr::LoadConfig()
         {
             std::string line, name, value;
 
+            // while there's something to parse
             while (ifs.good() && std::getline(ifs, line))
             {
+                // try to parse line
                 if (!_ParseConfigOpt(line, name, value))
                     continue;
 
+                // find option (must be previously added in InitDefaults
                 opt = _FindConfigOpt(name.c_str());
                 if (!opt)
                 {
@@ -161,6 +174,7 @@ bool ConfigMgr::LoadConfig()
                     continue;
                 }
 
+                // integer value - convert to integer and store
                 if (opt->type == CONF_OPT_TYPE_INT)
                 {
                     size_t lpos;
@@ -174,6 +188,7 @@ bool ConfigMgr::LoadConfig()
 
                     _SetConfigIntValue(opt->opt, tval, true);
                 }
+                // enum value - match integer value and store
                 else if (opt->type == CONF_OPT_TYPE_ENUM)
                 {
                     int64_t tval = _ParseEnumValue(value);
@@ -182,6 +197,7 @@ bool ConfigMgr::LoadConfig()
                     else
                         std::cerr << "Invalid enum value '" << value.c_str() << "' for option: " << name.c_str() << std::endl;
                 }
+                // string value - just store
                 else if (opt->type == CONF_OPT_TYPE_STRING)
                     _SetConfigStringValue(opt->opt, value.c_str(), true);
             }

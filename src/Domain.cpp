@@ -71,6 +71,7 @@ void VTPDomain::_ReduceVLANSet(std::set<uint16_t> const &vlanSet)
 {
     std::set<uint16_t> toRemove;
 
+    // find VLANs to be removed
     for (auto it : m_vlans)
     {
         if (vlanSet.find(it.first) == vlanSet.end())
@@ -86,6 +87,7 @@ void VTPDomain::_ReduceVLANSet(std::set<uint16_t> const &vlanSet)
 
 void VTPDomain::HandleSummaryAdvert(SummaryAdvertPacketBody* pkt, uint8_t followers)
 {
+    // if received revision is higher than our revision..
     if (pkt->revision > m_currentRevision)
     {
         // if there's no subset advert following this packet, ask for it using advert request
@@ -105,6 +107,7 @@ void VTPDomain::HandleSummaryAdvert(SummaryAdvertPacketBody* pkt, uint8_t follow
 
 void VTPDomain::HandleSubsetAdvert(SubsetAdvertPacketBody* pkt, uint8_t sequence_nr, size_t frame_limit_offset)
 {
+    // if received revision is higher than our revision, read contents and update our VLAN database
     if (pkt->revision > m_currentRevision)
     {
         SubsetVLANInfoBody* cur;
@@ -113,16 +116,20 @@ void VTPDomain::HandleSubsetAdvert(SubsetAdvertPacketBody* pkt, uint8_t sequence
         std::vector<SubsetVLANInfoBody*> readVlans;
         std::set<uint16_t> vlanIds;
 
+        // iterate while we are still within limits
         size_t offset = 0;
         while (offset < frame_limit_offset)
         {
+            // "cut" next chunk and convert to host endianity
             cur = (SubsetVLANInfoBody*)((&pkt->data) + offset);
             ToHostEndianity(cur);
 
+            // extract VLAN name
             name = std::string((const char*)&cur->data, (size_t)cur->name_length);
 
             vlanIds.insert(cur->isl_vlan_id);
 
+            // add or update VLAN
             vlan = GetVLANById(cur->isl_vlan_id);
             if (!vlan)
             {
@@ -138,6 +145,7 @@ void VTPDomain::HandleSubsetAdvert(SubsetAdvertPacketBody* pkt, uint8_t sequence
             offset += cur->length;
         }
 
+        // remove VLANs not present in subset advert packet
         _ReduceVLANSet(vlanIds);
 
         // update local revision number

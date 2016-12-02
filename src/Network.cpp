@@ -151,6 +151,8 @@ void VTPNetwork::SendPreparedPacket(PreparedPacket* pkt)
     memcpy(outBuffer + offset, pkt->data, pkt->data_len);
 
     // send!
+
+    // retrieve device index, so the sendto function would know, where to send the frame
     sockaddr_ll saddr;
     if (ioctl(m_socket, SIOCGIFINDEX, &m_ifopts) < 0)
         std::cerr << "Error when trying to retrieve interface index; is interface still available? errno = " << errno << std::endl;
@@ -161,6 +163,7 @@ void VTPNetwork::SendPreparedPacket(PreparedPacket* pkt)
     if (sendto(m_socket, outBuffer, totalLen, 0, (sockaddr*)&saddr, sizeof(sockaddr_ll)) < 0)
         std::cerr << "Failed to send packet through requested interface, errno = " << errno << std::endl;
 
+    // cleanup
     delete pkt->data;
     delete pkt;
     delete outBuffer;

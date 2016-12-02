@@ -5,6 +5,9 @@
 
 class Encapsulation;
 
+/**
+ * Class maintaining runtime storage
+ */
 class RuntimeGlobalsContainer
 {
     friend class Singleton<RuntimeGlobalsContainer>;
@@ -19,6 +22,7 @@ class RuntimeGlobalsContainer
         Encapsulation* GetOutputEncapsulation(bool tagged);
 
     protected:
+        // protected singleton constructor
         RuntimeGlobalsContainer();
 
         // output encapsulation (not tagged)

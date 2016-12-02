@@ -25,7 +25,9 @@ enum VTPMsgCode
 // domain name field length
 #define MAX_VTP_DOMAIN_LENGTH 32
 
+// length of timestamp field (summary advert)
 #define VTP_TIMESTAMP_LENGTH 12
+// length of MD5 hash (summary advert)
 #define VTP_MD5_LENGTH 16
 
 // for exact match, we need to eliminate additional padding
