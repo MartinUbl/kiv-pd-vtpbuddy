@@ -142,18 +142,46 @@ ConfigStoredOpt* ConfigMgr::_FindConfigOpt(const char* name)
     return nullptr;
 }
 
+std::string ConfigMgr::_FindConfigFile()
+{
+    // use C-style check, it's way faster than ifstream
+
+    FILE* f;
+
+    f = fopen(SYS_CONFIG_FILENAME, "r");
+    if (f)
+    {
+        fclose(f);
+        return SYS_CONFIG_FILENAME;
+    }
+
+    f = fopen(SYS_CONFIG_PATH, "r");
+    if (f)
+    {
+        fclose(f);
+        return SYS_CONFIG_PATH;
+    }
+
+    return "";
+}
+
 bool ConfigMgr::LoadConfig()
 {
     ConfigStoredOpt* opt;
 
     InitDefaults();
 
-    // TODO: find config in multiple paths, for now, just workdir
-    //       in future, search in /etc/vtpbuddy/, etc. also
+    std::string configPath = _FindConfigFile();
+
+    if (configPath.length() == 0)
+    {
+        std::cerr << "No config file found! Please, create one as " << SYS_CONFIG_PATH << std::endl;
+        return false;
+    }
 
     // ifstream scope
     {
-        std::ifstream ifs(SYS_CONFIG_FILENAME, std::ifstream::in);
+        std::ifstream ifs(configPath.c_str(), std::ifstream::in);
 
         if (ifs.is_open())
         {

@@ -74,6 +74,9 @@ class ConfigMgr
         // finds already stored config option
         ConfigStoredOpt* _FindConfigOpt(const char* name);
 
+        // Finds existing config file and returns full path
+        std::string _FindConfigFile();
+
         // initializes integer-type config value
         void _InitConfigIntValue(ConfigOpts opt, const char* name, int value);
         // initializes enum-type config value
