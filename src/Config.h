@@ -16,6 +16,9 @@ enum ConfigOpts
     CONF_INTERFACE  = 1,
     CONF_ENCAPS     = 2,
     CONF_VTP_VERSION    = 3,
+    CONF_PRIM_DOMAIN    = 4,
+    CONF_PRIM_PASSWORD  = 5,
+    CONF_VLAN_CONF_TYPE = 6,
     MAX_CONF_OPT
 };
 

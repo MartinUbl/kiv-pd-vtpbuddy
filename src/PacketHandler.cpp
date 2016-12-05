@@ -102,8 +102,9 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
     if (!domain)
     {
         // for now, create the domain; this is not desired behaviour for future!!!
-        domain = sDomainMgr->CreateDomain(domName.c_str(), nullptr);
-        std::cout << "TEMP: Creating domain " << domName.c_str() << std::endl;
+        //domain = sDomainMgr->CreateDomain(domName.c_str(), nullptr);
+        //std::cout << "TEMP: Creating domain " << domName.c_str() << std::endl;
+        return;
     }
 
     // frame length is stored in previous 2 bytes (when using 802.1Q, frame header "tail" is the same as 802.3 Ethernet)

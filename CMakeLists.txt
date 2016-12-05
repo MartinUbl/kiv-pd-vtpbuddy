@@ -22,4 +22,4 @@ ADD_EXECUTABLE(kiv-pd-vtpbuddy ${tmp_src})
 INSTALL(TARGETS kiv-pd-vtpbuddy DESTINATION /usr/sbin)
 INSTALL(FILES misc/vtpbuddy.cfg DESTINATION /etc/vtpbuddy)
 
-TARGET_LINK_LIBRARIES(kiv-pd-vtpbuddy pthread)
+TARGET_LINK_LIBRARIES(kiv-pd-vtpbuddy pthread crypto ssl)

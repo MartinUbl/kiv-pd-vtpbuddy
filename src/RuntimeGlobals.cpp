@@ -5,6 +5,7 @@
 #include "VTPFieldValues.h"
 #include "Config.h"
 #include "EthernetStructs.h"
+#include "ConfigurationGenerator.h"
 
 #include <string.h>
 
@@ -14,9 +15,30 @@ RuntimeGlobalsContainer::RuntimeGlobalsContainer()
     m_outputTaggedEncapsulation = nullptr;
 }
 
+void RuntimeGlobalsContainer::InitializeRuntime()
+{
+    InitOutputEncapsulation();
+    InitConfigurationGenerator();
+}
+
 void RuntimeGlobalsContainer::SetSourceMAC(uint8_t* source_mac)
 {
     memcpy(m_sourceAddr, source_mac, MAC_ADDR_LENGTH);
+}
+
+const uint8_t* RuntimeGlobalsContainer::GetSourceMAC() const
+{
+    return m_sourceAddr;
+}
+
+void RuntimeGlobalsContainer::SetSourceIP(uint32_t source_ip)
+{
+    m_sourceIPAddr = source_ip;
+}
+
+const uint32_t RuntimeGlobalsContainer::GetSourceIP() const
+{
+    return m_sourceIPAddr;
 }
 
 void RuntimeGlobalsContainer::InitOutputEncapsulation()
@@ -49,4 +71,18 @@ void RuntimeGlobalsContainer::InitOutputEncapsulation()
 Encapsulation* RuntimeGlobalsContainer::GetOutputEncapsulation(bool tagged)
 {
     return tagged ? m_outputTaggedEncapsulation : m_outputEncapsulation;
+}
+
+void RuntimeGlobalsContainer::InitConfigurationGenerator()
+{
+    int64_t tp = sConfig->GetConfigIntValue(CONF_VLAN_CONF_TYPE);
+    if (tp == CONFIGURATION_TYPE_CONFIG)
+        m_configGenerator = new CMConfigurationGenerator();
+    else if (tp == CONFIGURATION_TYPE_VLANDB)
+        m_configGenerator = new VDConfigurationGenerator();
+}
+
+ConfigurationGenerator* RuntimeGlobalsContainer::GetConfigurationGenerator()
+{
+    return m_configGenerator;
 }

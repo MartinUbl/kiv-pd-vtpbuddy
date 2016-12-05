@@ -16,6 +16,9 @@ void ConfigMgr::InitDefaults()
     _InitConfigStringValue(CONF_INTERFACE, "interface", "eth1");
     _InitConfigEnumValue(CONF_ENCAPS, "encapsulation", ENCAPS_DOT1Q);
     _InitConfigIntValue(CONF_VTP_VERSION, "vtp_version", 2);
+    _InitConfigStringValue(CONF_PRIM_DOMAIN, "domain", "NOT_CONFIGURED");
+    _InitConfigStringValue(CONF_PRIM_PASSWORD, "password", "");
+    _InitConfigEnumValue(CONF_VLAN_CONF_TYPE, "vlan_conf_type", CONFIGURATION_TYPE_VLANDB);
 }
 
 int64_t ConfigMgr::_ParseEnumValue(std::string str)
@@ -24,6 +27,10 @@ int64_t ConfigMgr::_ParseEnumValue(std::string str)
         return ENCAPS_ISL;
     if (str == "dot1q")
         return ENCAPS_DOT1Q;
+    if (str == "config")
+        return CONFIGURATION_TYPE_CONFIG;
+    if (str == "vlandb")
+        return CONFIGURATION_TYPE_VLANDB;
 
     return -1;
 }

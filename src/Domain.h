@@ -4,6 +4,8 @@
 #include "VTPStructs.h"
 #include "VLAN.h"
 
+class ConfigurationGenerator;
+
 typedef std::map<uint16_t, VLANRecord*> VLANMap;
 
 /**
@@ -15,6 +17,9 @@ class VTPDomain
         // constructor retaining mandatory parameter(s)
         VTPDomain(const char* name, const char* password = nullptr);
 
+        // performs startup operations for domain (simulating "switch power on")
+        void Startup();
+
         // retrieves domain name
         const char* GetName() const;
 
@@ -23,9 +28,9 @@ class VTPDomain
         // finds and returns VLAN by its ID
         VLANRecord* GetVLANById(uint16_t id);
         // adds new VLAN to domain
-        void AddVLAN(uint16_t id, uint8_t type, uint32_t index80210, const char* name);
+        void AddVLAN(uint16_t id, uint8_t type, uint8_t status, uint16_t mtu, uint32_t index80210, const char* name);
         // updates existing VLAN in domain
-        void UpdateVLAN(uint16_t id, uint8_t type, uint32_t index80210, const char* name);
+        void UpdateVLAN(uint16_t id, uint8_t type, uint8_t status, uint16_t mtu, uint32_t index80210, const char* name);
         // removes VLAN from domain
         void RemoveVLAN(uint16_t id);
 
@@ -39,9 +44,22 @@ class VTPDomain
         // handle incoming advertisement request packet
         void HandleAdvertRequest(AdvertRequestPacketBody* pkt);
 
+        // sends summary advert
+        void SendSummaryAdvert(uint8_t followers);
+        // sends an advert request packet
+        void SendAdvertRequest(uint32_t start_revision);
+        
+        // saves stored VLANs into file
+        void SaveToFile();
+        // loads stored VLANs from file
+        void LoadFromFile();
+
     protected:
         // reduces VLAN set - vlanSet is set of VLANs to be preserved
         void _ReduceVLANSet(std::set<uint16_t> const &vlanSet);
+
+        // save single VLAN to file
+        void _SaveVLANToFile(std::ofstream &ofs, ConfigurationGenerator* generator, VLANRecord* vlan);
 
     private:
         // domain name

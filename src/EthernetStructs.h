@@ -3,6 +3,8 @@
 
 // MAC address length
 #define MAC_ADDR_LENGTH 6
+// IP address length
+#define IP_ADDR_LENGTH 4
 // length of SNAP OUI field
 #define SNAP_OUI_LEN 3
 

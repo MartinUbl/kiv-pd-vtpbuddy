@@ -8,5 +8,11 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <fstream>
+
+#ifndef _WIN32
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
 
 #endif

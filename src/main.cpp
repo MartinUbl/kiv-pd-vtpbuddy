@@ -92,6 +92,8 @@ bool process_command(std::string &comm)
 
 int main(int argc, char** argv)
 {
+    std::cout << "VTPBuddy v1.0" << std::endl;
+
     // hook SIGINT, so we could properly terminate whole process
     signal(SIGINT, signal_handler);
 
@@ -108,9 +110,14 @@ int main(int argc, char** argv)
     if (!sNetwork->InitSocket(sConfig->GetConfigStringValue(CONF_INTERFACE)))
         return 2;
 
-    sRuntimeGlobals->InitOutputEncapsulation();
+    sRuntimeGlobals->InitializeRuntime();
 
     sNetwork->StartListener();
+
+    std::cout << "Primary domain: " << sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN) << std::endl;
+
+    VTPDomain* primaryDomain = sDomainMgr->CreateDomain(sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN), sConfig->GetConfigStringValue(CONF_PRIM_PASSWORD));
+    primaryDomain->Startup();
 
     // cli loop
     while (_appRunning)

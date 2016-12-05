@@ -90,6 +90,16 @@ bool VTPNetwork::InitSocket(const char* iface)
 
     sRuntimeGlobals->SetSourceMAC((uint8_t*)m_ifopts.ifr_hwaddr.sa_data);
 
+    // set some implicit IP in case the interface doesn't have assigned one
+    in_addr addr;
+    addr.s_addr = htonl(0xFDFDFDFD);
+
+    // retrieve IP address; may not be assigned
+    if (ioctl(m_socket, SIOCGIFADDR, &m_ifopts) == 0)
+        addr = ((struct sockaddr_in *)&m_ifopts.ifr_addr)->sin_addr;
+
+    sRuntimeGlobals->SetSourceIP((uint32_t)addr.s_addr);
+
     return true;
 }
 

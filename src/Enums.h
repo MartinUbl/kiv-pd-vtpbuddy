@@ -17,4 +17,11 @@ enum VTPEncapsulation
     ENCAPS_DOT1Q    = 1,        // 802.1Q protocol
 };
 
+// enumerator of supported configuration types
+enum ConfigurationGeneratorType
+{
+    CONFIGURATION_TYPE_CONFIG   = 0, // configured from "configure" mode
+    CONFIGURATION_TYPE_VLANDB   = 1, // configured from "vlan database" mode
+};
+
 #endif
