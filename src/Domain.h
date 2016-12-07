@@ -66,6 +66,12 @@ class VTPDomain
         std::string m_name;
         // domain password
         std::string m_password;
+        // checksum of last configuration
+        uint8_t m_lastChecksum[16];
+        // last update timestamp
+        uint8_t m_lastUpdateTimestamp[12];
+        // updater identity
+        uint8_t m_updaterIdentity[4];
         // current configuration revision
         uint32_t m_currentRevision;
         // last sequence number of subset advert sent/received

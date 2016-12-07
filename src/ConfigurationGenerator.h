@@ -45,6 +45,9 @@ class ConfigurationGenerator
         // constructor retaining type
         ConfigurationGenerator(ConfigurationGeneratorType type) : m_type(type) {};
 
+        // retrieves generator type
+        ConfigurationGeneratorType GetType() { return m_type; };
+
         // generates VLAN block start
         virtual bool BlockStart(std::string &target, uint16_t vlanId, const char* name) = 0;
         // generates VLAN type configuration

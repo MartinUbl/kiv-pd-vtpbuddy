@@ -9,6 +9,7 @@
 #include "RuntimeGlobals.h"
 #include <arpa/inet.h>
 
+#include <iomanip>
 #include <openssl/md5.h>
 
 VTPDomain::VTPDomain(const char* name, const char* password)
@@ -17,6 +18,10 @@ VTPDomain::VTPDomain(const char* name, const char* password)
     m_password = password ? password : "";
     m_currentRevision = 0;
     m_lastSubsetSequenceNumber = 1;
+
+    memset(m_lastChecksum, 0, 16);
+    memset(m_lastUpdateTimestamp, 0, 12);
+    memset(m_updaterIdentity, 0, 4);
 }
 
 void VTPDomain::Startup()
@@ -102,10 +107,6 @@ void VTPDomain::_ReduceVLANSet(std::set<uint16_t> const &vlanSet)
 
 void VTPDomain::HandleSummaryAdvert(SummaryAdvertPacketBody* pkt, uint8_t followers)
 {
-    for (int i = 0; i < 16; i++)
-        printf("%.2X ", pkt->md5_digest[i]);
-    std::cout << std::endl;
-
     uint8_t myDigest[VTP_MD5_LENGTH + 1];
     // this is wrong, VTP node appends domain, password, version, ... into hash
     // TODO: figure it out
@@ -116,8 +117,14 @@ void VTPDomain::HandleSummaryAdvert(SummaryAdvertPacketBody* pkt, uint8_t follow
     {
         // if there's no subset advert following this packet, ask for it using advert request
         if (followers == 0)
-        {
             SendAdvertRequest(pkt->revision);
+        else
+        {
+            // summary advert always comes right before subset advert(s), so we can save MD5 digest here
+
+            memcpy(m_lastChecksum, pkt->md5_digest, 16);
+            memcpy(m_lastUpdateTimestamp, pkt->update_timestamp, 12);
+            memcpy(m_updaterIdentity, &pkt->updater_id, 4);
         }
     }
 }
@@ -237,17 +244,32 @@ void VTPDomain::SaveToFile()
             return;
         }
 
+        ConfigurationGenerator* cfgen = sRuntimeGlobals->GetConfigurationGenerator();
+
         of << "# Configuration for domain " << m_name.c_str() << std::endl;
 
         of << std::endl;
 
+        of << "#!META:CONFTYPE=" << std::to_string(cfgen->GetType()) << std::endl;
         of << "#!META:DOMAIN=" << m_name.c_str() << std::endl;
         of << "#!META:REVISION=" << std::to_string(m_currentRevision) << std::endl;
+        of << "#!META:TIMESTAMP=" << std::string((const char*)m_lastUpdateTimestamp, (size_t)12) << std::endl;
+        of << "#!META:UPDATER=" << std::to_string(m_updaterIdentity[3]) << "." << std::to_string(m_updaterIdentity[2]) << "." << std::to_string(m_updaterIdentity[1]) << "." << std::to_string(m_updaterIdentity[0]) << std::endl;
+        of << "#!META:CHECKSUM=";
+        {
+            std::ios::fmtflags f(of.flags());
+
+            of << std::hex << std::setfill('0') << std::setw(2);
+            for (size_t i = 0; i < 16; i++)
+                of << (int)m_lastChecksum[i];
+
+            of.flags(f);
+        }
+        of << std::endl;
 
         of << std::endl;
         
         VLANRecord* rec;
-        ConfigurationGenerator* cfgen = sRuntimeGlobals->GetConfigurationGenerator();
         for (auto vl : m_vlans)
         {
             rec = vl.second;
