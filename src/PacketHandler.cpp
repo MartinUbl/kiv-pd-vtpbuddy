@@ -96,16 +96,11 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
 
     VTPHeader* hdr = (VTPHeader*)&buffer[base_offset + VTP_VERSION_OFFSET];
 
-    // find domain
+    // find domain - if not present, do nothing, we accept just our preconfigured domains
     std::string domName((const char*)hdr->domain_name, (size_t)hdr->domain_len);
     VTPDomain* domain = sDomainMgr->GetDomainByName(domName.c_str());
     if (!domain)
-    {
-        // for now, create the domain; this is not desired behaviour for future!!!
-        //domain = sDomainMgr->CreateDomain(domName.c_str(), nullptr);
-        //std::cout << "TEMP: Creating domain " << domName.c_str() << std::endl;
         return;
-    }
 
     // frame length is stored in previous 2 bytes (when using 802.1Q, frame header "tail" is the same as 802.3 Ethernet)
     uint16_t frameLength = _ReadU16(buffer, base_offset - 2);
@@ -115,7 +110,6 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
     {
         case VTP_MSG_SUMMARY_ADVERT:
         {
-            std::cout << "Received VTP summary advert packet" << std::endl;
             SummaryAdvertPacketBody* pkt = (SummaryAdvertPacketBody*)&buffer[base_offset + VTP_VERSION_OFFSET + sizeof(VTPHeader)];
             ToHostEndianity(pkt);
 
@@ -125,7 +119,6 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
         }
         case VTP_MSG_SUBSET_ADVERT:
         {
-            std::cout << "Received VTP subset advert packet" << std::endl;
             SubsetAdvertPacketBody* pkt = (SubsetAdvertPacketBody*)&buffer[base_offset + VTP_VERSION_OFFSET + sizeof(VTPHeader)];
             ToHostEndianity(pkt);
 
@@ -135,7 +128,6 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
         }
         case VTP_MSG_ADVERT_REQUEST:
         {
-            std::cout << "Received VTP advert request packet" << std::endl;
             AdvertRequestPacketBody* pkt = (AdvertRequestPacketBody*)&buffer[base_offset + VTP_VERSION_OFFSET + sizeof(VTPHeader)];
             ToHostEndianity(pkt);
 
@@ -144,19 +136,16 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
             break;
         }
         case VTP_MSG_JOIN:
-            std::cout << "Received VTP join packet" << std::endl;
             // NYI
             break;
         case VTP_MSG_TAKEOVER_REQUEST:
-            std::cout << "Received VTP takeover request packet" << std::endl;
             // NYI
             break;
         case VTP_MSG_TAKEOVER_RESPONSE:
-            std::cout << "Received VTP takeover response packet" << std::endl;
             // NYI
             break;
         default:
-            std::cerr << "Received unknown VTP packet type, not handling." << std::endl;
+            std::cerr << "Received unknown VTP packet type (" << (int)hdr->code << "), not handling." << std::endl;
             break;
     }
 }

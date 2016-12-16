@@ -105,8 +105,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // TODO: load already listed domains, after saving is done
-
     // initialize network
     if (!sNetwork->InitSocket(sConfig->GetConfigStringValue(CONF_INTERFACE)))
         return 2;
@@ -124,6 +122,7 @@ int main(int argc, char** argv)
     else if (sConfig->GetConfigIntValue(CONF_MODE) == OM_CLIENT)
         std::cout << "Mode:           client" << std::endl;
 
+    // create primary domain; this will also load the domain from file, if already stored
     VTPDomain* primaryDomain = sDomainMgr->CreateDomain(sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN), sConfig->GetConfigStringValue(CONF_PRIM_PASSWORD));
     primaryDomain->Startup();
 

@@ -163,15 +163,10 @@ void VTPDomain::HandleSubsetAdvert(SubsetAdvertPacketBody* pkt, uint8_t sequence
             if (!vlan)
             {
                 AddVLAN(cur->isl_vlan_id, cur->type, cur->status, cur->mtu_size, cur->index80210, name.c_str());
-                std::cout << "Adding VLAN: " << name.c_str() << " (" << cur->isl_vlan_id << ")" << std::endl;
-
                 vlan = GetVLANById(cur->isl_vlan_id);
             }
             else
-            {
                 UpdateVLAN(cur->isl_vlan_id, cur->type, cur->status, cur->mtu_size, cur->index80210, name.c_str());
-                std::cout << "Updating VLAN: " << name.c_str() << " (" << vlan->name.c_str() << " - " << cur->isl_vlan_id << ")" << std::endl;
-            }
 
             vlan->features.clear();
             for (size_t g = offset + sizeof(SubsetVLANInfoBody) - 1 + name_padded; g < offset + cur->length; g += 4)
