@@ -2,6 +2,7 @@
 #include "Config.h"
 #include "Network.h"
 #include "DomainMgr.h"
+#include "Enums.h"
 #include "RuntimeGlobals.h"
 
 #include <sstream>
@@ -92,7 +93,7 @@ bool process_command(std::string &comm)
 
 int main(int argc, char** argv)
 {
-    std::cout << "VTPBuddy v1.0" << std::endl;
+    std::cout << "VTPBuddy, version 1.0" << std::endl;
 
     // hook SIGINT, so we could properly terminate whole process
     signal(SIGINT, signal_handler);
@@ -115,6 +116,13 @@ int main(int argc, char** argv)
     sNetwork->StartListener();
 
     std::cout << "Primary domain: " << sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN) << std::endl;
+    if (sConfig->GetConfigIntValue(CONF_MODE) == OM_SERVER)
+    {
+        std::cout << "Server mode is not yet supported, please, use client or transparent mode" << std::endl;
+        return 1;
+    }
+    else if (sConfig->GetConfigIntValue(CONF_MODE) == OM_CLIENT)
+        std::cout << "Mode:           client" << std::endl;
 
     VTPDomain* primaryDomain = sDomainMgr->CreateDomain(sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN), sConfig->GetConfigStringValue(CONF_PRIM_PASSWORD));
     primaryDomain->Startup();

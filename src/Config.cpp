@@ -12,7 +12,7 @@ ConfigMgr::ConfigMgr()
 
 void ConfigMgr::InitDefaults()
 {
-    _InitConfigIntValue(CONF_MODE, "mode", OM_SERVER);
+    _InitConfigEnumValue(CONF_MODE, "mode", OM_CLIENT);
     _InitConfigStringValue(CONF_INTERFACE, "interface", "eth1");
     _InitConfigEnumValue(CONF_ENCAPS, "encapsulation", ENCAPS_DOT1Q);
     _InitConfigIntValue(CONF_VTP_VERSION, "vtp_version", 2);
@@ -21,16 +21,31 @@ void ConfigMgr::InitDefaults()
     _InitConfigEnumValue(CONF_VLAN_CONF_TYPE, "vlan_conf_type", CONFIGURATION_TYPE_VLANDB);
 }
 
-int64_t ConfigMgr::_ParseEnumValue(std::string str)
+int64_t ConfigMgr::_ParseEnumValue(ConfigOpts opt, std::string str)
 {
-    if (str == "isl")
-        return ENCAPS_ISL;
-    if (str == "dot1q")
-        return ENCAPS_DOT1Q;
-    if (str == "config")
-        return CONFIGURATION_TYPE_CONFIG;
-    if (str == "vlandb")
-        return CONFIGURATION_TYPE_VLANDB;
+    if (opt == CONF_ENCAPS)
+    {
+        if (str == "isl")
+            return ENCAPS_ISL;
+        if (str == "dot1q")
+            return ENCAPS_DOT1Q;
+    }
+    else if (opt == CONF_VLAN_CONF_TYPE)
+    {
+        if (str == "config")
+            return CONFIGURATION_TYPE_CONFIG;
+        if (str == "vlandb")
+            return CONFIGURATION_TYPE_VLANDB;
+    }
+    else if (opt == CONF_MODE)
+    {
+        if (str == "server")
+            return OM_SERVER;
+        else if (str == "client")
+            return OM_CLIENT;
+        else if (str == "transparent")
+            return OM_TRANSPARENT;
+    }
 
     return -1;
 }
@@ -226,7 +241,7 @@ bool ConfigMgr::LoadConfig()
                 // enum value - match integer value and store
                 else if (opt->type == CONF_OPT_TYPE_ENUM)
                 {
-                    int64_t tval = _ParseEnumValue(value);
+                    int64_t tval = _ParseEnumValue(opt->opt, value);
                     if (tval >= 0)
                         _SetConfigIntValue(opt->opt, tval, true);
                     else

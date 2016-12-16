@@ -92,7 +92,7 @@ class ConfigMgr
         void _SetConfigStringValue(ConfigOpts opt, const char* value, bool initialized = false);
 
         // parses enumerator value; returns -1 on error (not found)
-        int64_t _ParseEnumValue(std::string str);
+        int64_t _ParseEnumValue(ConfigOpts opt, std::string str);
 
     private:
         // stored config options
