@@ -36,6 +36,18 @@ static const char* VLANCFG_bridgeMode[MAX_VLAN_BRMODE] = {
     "srb"           // VLAN_BRMODE_SRB
 };
 
+// macro of value returned when identifier has not been found
+#define FIND_IDENTIFIER_ERROR 0xFFFF
+
+// retrieves active state ID by its name, 0xFFFF on error
+uint16_t FindConfActiveStateId(const char* name);
+// retrieves media type ID by its name, 0xFFFF on error
+uint16_t FindConfMediaTypeId(const char* name);
+// retrieves STP mode ID by its name, 0xFFFF on error
+uint16_t FindConfSTPModeId(const char* name);
+// retrieves bridge mode ID by its name, 0xFFFF on error
+uint16_t FindConfBridgeModeId(const char* name);
+
 /**
  * Base class for all configuration generators
  */

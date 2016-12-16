@@ -6,7 +6,9 @@
 #include "VTPStructs.h"
 #include "Config.h"
 #include "ConfigurationGenerator.h"
+#include "ConfigurationLoader.h"
 #include "RuntimeGlobals.h"
+#include "Shared.h"
 #include <arpa/inet.h>
 
 #include <iomanip>
@@ -26,6 +28,10 @@ VTPDomain::VTPDomain(const char* name, const char* password)
 
 void VTPDomain::Startup()
 {
+    // attempt to load from file - if available
+    LoadFromFile();
+
+    // if we are in client mode, let's send advertisement request so the other devices would send us their configuration
     if (sConfig->GetConfigIntValue(CONF_MODE) == OM_CLIENT)
         SendAdvertRequest(0);
 }
@@ -99,10 +105,7 @@ void VTPDomain::_ReduceVLANSet(std::set<uint16_t> const &vlanSet)
     }
 
     for (uint16_t vlanId : toRemove)
-    {
-        std::cout << "Removing VLAN " << vlanId << std::endl;
         RemoveVLAN(vlanId);
-    }
 }
 
 void VTPDomain::HandleSummaryAdvert(SummaryAdvertPacketBody* pkt, uint8_t followers)
@@ -205,8 +208,6 @@ void VTPDomain::HandleAdvertRequest(AdvertRequestPacketBody* pkt)
 
 void VTPDomain::SendAdvertRequest(uint32_t start_revision)
 {
-    std::cout << "Sending advert request" << std::endl;
-
     PreparedPacket* reqpkt = PreparedPacket::Prepare(VTP_MSG_ADVERT_REQUEST, sizeof(AdvertRequestPacketBody), GetName());
 
     AdvertRequestPacketBody* bd = (AdvertRequestPacketBody*)reqpkt->data;
@@ -246,9 +247,7 @@ void VTPDomain::SaveToFile()
 
         ConfigurationGenerator* cfgen = sRuntimeGlobals->GetConfigurationGenerator();
 
-        of << "# Configuration for domain " << m_name.c_str() << std::endl;
-
-        of << std::endl;
+        // append metadata to output file
 
         of << "#!META:CONFTYPE=" << std::to_string(cfgen->GetType()) << std::endl;
         of << "#!META:DOMAIN=" << m_name.c_str() << std::endl;
@@ -267,14 +266,18 @@ void VTPDomain::SaveToFile()
         }
         of << std::endl;
 
-        of << std::endl;
+        of << std::endl; // the header is always delimited by empty line
         
         VLANRecord* rec;
         for (auto vl : m_vlans)
         {
             rec = vl.second;
-            
+
+            // wrap VLAN configuration to starting and ending tags
+
+            of << "#!VLAN:START" << std::endl;
             _SaveVLANToFile(of, cfgen, rec);
+            of << "#!VLAN:END" << std::endl;
 
             of << std::endl;
         }
@@ -375,5 +378,137 @@ void VTPDomain::_SaveVLANToFile(std::ofstream &ofs, ConfigurationGenerator* gene
 
 void VTPDomain::LoadFromFile()
 {
-    //
+    // ifstream scope
+    {
+        std::ifstream ifs("data/" + m_name);
+        if (!ifs.is_open())
+        {
+            // no domain data stored yet
+            return;
+        }
+
+        std::string line;
+        std::string metaval, metaname;
+        size_t confType = 0xFFFF;
+
+        size_t metadataBitmap = 0;
+
+        // at first, load metadata
+
+        while (ifs.good())
+        {
+            std::getline(ifs, line);
+            line = str_trim(line);
+
+            // empty line delimits header
+            if (line.length() == 0)
+                break;
+
+            if (line.substr(0, 7) == "#!META:")
+            {
+                metaval = line.substr(7);
+                size_t eqpos = metaval.find_first_of('=');
+                if (eqpos == std::string::npos)
+                {
+                    std::cerr << "Invalid meta definition in domain file: " << metaval.c_str() << std::endl;
+                    continue;
+                }
+
+                metaname = metaval.substr(0, eqpos);
+                metaval = metaval.substr(eqpos + 1);
+
+                try
+                {
+                    if (metaname == "DOMAIN")
+                    {
+                        if (m_name != metaval)
+                            std::cerr << "Domain name mismatch, file named '" << m_name.c_str() << "' contains domain data for '" << metaval.c_str() << "'";
+
+                        metadataBitmap |= (1 << 0);
+                    }
+                    else if (metaname == "REVISION")
+                    {
+                        m_currentRevision = parseLong_ex(metaval.c_str());
+
+                        metadataBitmap |= (1 << 1);
+                    }
+                    else if (metaname == "UPDATER")
+                    {
+                        parseIPv4_ex(metaval.c_str(), m_updaterIdentity);
+
+                        metadataBitmap |= (1 << 2);
+                    }
+                    else if (metaname == "CHECKSUM")
+                    {
+                        if (metaval.length() < 16)
+                            throw std::invalid_argument(metaval);
+                        memcpy(m_lastChecksum, metaval.c_str(), 16);
+
+                        metadataBitmap |= (1 << 3);
+                    }
+                    else if (metaname == "TIMESTAMP")
+                    {
+                        if (metaval.length() < 12)
+                            throw std::invalid_argument(metaval);
+                        memcpy(m_lastUpdateTimestamp, metaval.c_str(), 12);
+
+                        metadataBitmap |= (1 << 4);
+                    }
+                    else if (metaname == "CONFTYPE")
+                    {
+                        confType = parseLong_ex(metaval.c_str());
+
+                        metadataBitmap |= (1 << 5);
+                    }
+                }
+                catch (std::invalid_argument &ex)
+                {
+                    std::cerr << "Invalid meta " << metaname.c_str() << " value: " << metaval.c_str() << std::endl;
+                }
+            }
+            else
+            {
+                std::cerr << "Invalid line in header file: " << line.c_str() << std::endl;
+            }
+        }
+
+        // just integrity check - 1 << 6 is first unused bit, -1 due to check for all lower bits to be ON
+        // this is probably not critical
+        if (metadataBitmap != ((1 << 6) - 1))
+            std::cerr << "Possible metadata corruption (bmap " << metadataBitmap << ", expected " << ((1 << 6) - 1) << "), configuration may not be loaded properly" << std::endl;
+
+        VLANRecord* rec;
+
+        ConfigurationLoader* cldr = nullptr;
+
+        // use loader mentioned in metadata
+        switch (confType)
+        {
+            case CONFIGURATION_TYPE_CONFIG:
+                cldr = new CMConfigurationLoader();
+                break;
+            case CONFIGURATION_TYPE_VLANDB:
+                cldr = new VDConfigurationLoader();
+                break;
+            default:
+                std::cerr << "Unknown configuration type detected (" << confType << "), could not load domain configuration" << std::endl;
+                return;
+        }
+
+        rec = new VLANRecord;
+        while (cldr->LoadVLAN(ifs, rec))
+        {
+            // do not store incorrect records
+            if (rec->id == 0 || rec->name.length() == 0)
+            {
+                rec->ResetRecordState();
+                continue;
+            }
+
+            m_vlans[rec->id] = rec;
+
+            rec = new VLANRecord;
+        }
+        delete rec; // one record is always allocated excessively
+    }
 }

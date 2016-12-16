@@ -23,9 +23,11 @@ enum VLANFeature
 struct VLANRecord
 {
     // implicit constructor
-    VLANRecord() { id = 0; status = 0; type = 0; index80210 = 0; name = ""; };
+    VLANRecord() { ResetRecordState(); };
     // full-parameter constructor
     VLANRecord(uint8_t _type, uint8_t _status, uint16_t _id, uint16_t _mtu, uint32_t _index80210, const char* _name) : type(_type), status(_status), id(_id), mtu(_mtu), index80210(_index80210), name(_name) { };
+
+    void ResetRecordState() { id = 0; status = 0; type = 0; index80210 = 0; name = ""; mtu = 0; index80210 = 0; features.clear(); };
 
     // VLAN type
     uint8_t type;
