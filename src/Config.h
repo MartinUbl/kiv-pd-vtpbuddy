@@ -19,6 +19,9 @@ enum ConfigOpts
     CONF_PRIM_DOMAIN    = 4,
     CONF_PRIM_PASSWORD  = 5,
     CONF_VLAN_CONF_TYPE = 6,
+    CONF_VERSION_TOOL   = 7,
+    CONF_DATA_LOCATION  = 8,
+    CONF_VERSION_REPO   = 9,
     MAX_CONF_OPT
 };
 

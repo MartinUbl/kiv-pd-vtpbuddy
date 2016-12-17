@@ -9,6 +9,7 @@
 #include "ConfigurationLoader.h"
 #include "RuntimeGlobals.h"
 #include "Shared.h"
+#include "Versioning.h"
 #include <arpa/inet.h>
 
 #include <iomanip>
@@ -193,6 +194,12 @@ void VTPDomain::HandleSubsetAdvert(SubsetAdvertPacketBody* pkt, uint8_t sequence
         // save to file now
         // TODO: make this periodic?
         SaveToFile();
+
+        // commit and push changes
+        // TODO: delegate push to a thread, synchronize with further pushes
+        VersioningBase* vers = sRuntimeGlobals->GetVersioningTool();
+        vers->Commit();
+        vers->Push();
     }
 }
 
@@ -214,17 +221,19 @@ void VTPDomain::SendAdvertRequest(uint32_t start_revision)
 
 void VTPDomain::SaveToFile()
 {
+    std::string datapath = SanitizePath(sConfig->GetConfigStringValue(CONF_DATA_LOCATION));
+
     bool exists = true;
-    // TODO: include system paths
+
     struct stat info;
-    if (stat("data", &info) != 0)
+    if (stat(datapath.c_str(), &info) != 0)
         exists = false;
     else if (!(info.st_mode & S_IFDIR))
         exists = false;
-        
+
     if (!exists)
     {
-        if (mkdir("data", 0777) != 0)
+        if (mkdir(datapath.c_str(), 0777) != 0)
         {
             std::cerr << "Could not open or create data directory!" << std::endl;
             return;
@@ -233,7 +242,7 @@ void VTPDomain::SaveToFile()
     
     // ofstream scope
     {
-        std::ofstream of("data/" + m_name);
+        std::ofstream of(datapath + m_name);
         if (!of.is_open())
         {
             std::cerr << "Could not open data file for domain " << m_name.c_str() << "!" << std::endl;
@@ -373,9 +382,11 @@ void VTPDomain::_SaveVLANToFile(std::ofstream &ofs, ConfigurationGenerator* gene
 
 void VTPDomain::LoadFromFile()
 {
+    std::string datapath = SanitizePath(sConfig->GetConfigStringValue(CONF_DATA_LOCATION));
+
     // ifstream scope
     {
-        std::ifstream ifs("data/" + m_name);
+        std::ifstream ifs(datapath + m_name);
         if (!ifs.is_open())
         {
             // no domain data stored yet

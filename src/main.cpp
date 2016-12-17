@@ -4,6 +4,8 @@
 #include "DomainMgr.h"
 #include "Enums.h"
 #include "RuntimeGlobals.h"
+#include "Versioning.h"
+#include "Shared.h"
 
 #include <sstream>
 #include <signal.h>
@@ -105,6 +107,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (SanitizePath(sConfig->GetConfigStringValue(CONF_DATA_LOCATION)) == "")
+    {
+        std::cerr << "Invalid path configured as data location!" << std::endl;
+        return 3;
+    }
+
     // initialize network
     if (!sNetwork->InitSocket(sConfig->GetConfigStringValue(CONF_INTERFACE)))
         return 2;
@@ -113,14 +121,25 @@ int main(int argc, char** argv)
 
     sNetwork->StartListener();
 
-    std::cout << "Primary domain: " << sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN) << std::endl;
+    std::cout << "Primary domain:    " << sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN) << std::endl;
+
     if (sConfig->GetConfigIntValue(CONF_MODE) == OM_SERVER)
     {
         std::cout << "Server mode is not yet supported, please, use client or transparent mode" << std::endl;
         return 1;
     }
     else if (sConfig->GetConfigIntValue(CONF_MODE) == OM_CLIENT)
-        std::cout << "Mode:           client" << std::endl;
+        std::cout << "Mode:              client" << std::endl;
+    else if (sConfig->GetConfigIntValue(CONF_MODE) == OM_TRANSPARENT)
+        std::cout << "Mode:              transparent" << std::endl;
+
+    VersioningBase* verb = sRuntimeGlobals->GetVersioningTool();
+    if (!verb || !verb->VerifyToolchainPresence())
+    {
+        std::cout << "Selected versioning toolchain was not found in the system, or is not supported!" << std::endl;
+        return 1;
+    }
+    std::cout << "Database revision: " << verb->GetRevisionNumber() << std::endl;
 
     // create primary domain; this will also load the domain from file, if already stored
     VTPDomain* primaryDomain = sDomainMgr->CreateDomain(sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN), sConfig->GetConfigStringValue(CONF_PRIM_PASSWORD));

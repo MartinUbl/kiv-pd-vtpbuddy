@@ -6,6 +6,7 @@
 #include "Config.h"
 #include "EthernetStructs.h"
 #include "ConfigurationGenerator.h"
+#include "Versioning.h"
 
 #include <string.h>
 
@@ -13,12 +14,15 @@ RuntimeGlobalsContainer::RuntimeGlobalsContainer()
 {
     m_outputEncapsulation = nullptr;
     m_outputTaggedEncapsulation = nullptr;
+    m_versioningTool = nullptr;
+    m_configGenerator = nullptr;
 }
 
 void RuntimeGlobalsContainer::InitializeRuntime()
 {
     InitOutputEncapsulation();
     InitConfigurationGenerator();
+    InitVersioningTool();
 }
 
 void RuntimeGlobalsContainer::SetSourceMAC(uint8_t* source_mac)
@@ -85,4 +89,18 @@ void RuntimeGlobalsContainer::InitConfigurationGenerator()
 ConfigurationGenerator* RuntimeGlobalsContainer::GetConfigurationGenerator()
 {
     return m_configGenerator;
+}
+
+void RuntimeGlobalsContainer::InitVersioningTool()
+{
+    int64_t tp = sConfig->GetConfigIntValue(CONF_VERSION_TOOL);
+    if (tp == VERSIONING_SVN)
+        m_versioningTool = new SVNVersioning();
+    //else if (tp == VERSIONING_GIT)
+    //    m_versioningTool = new GITVersioning();
+}
+
+VersioningBase* RuntimeGlobalsContainer::GetVersioningTool()
+{
+    return m_versioningTool;
 }

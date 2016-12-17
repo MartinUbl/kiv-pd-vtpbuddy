@@ -24,4 +24,11 @@ int64_t parseLong_ex(const char* input);
 void parseIPv4_ex(const char* input, uint8_t* target);
 bool secureArgCount(std::vector<std::string> vec, size_t len);
 
+int ExecAndWait(const char* path, const char* argv[]);
+std::string ExecAndGetOutput(const char* path, const char* argv[], int& retvalue);
+
+std::string SanitizePath(const char* path);
+
+bool ListDirectory(const char* dirName, std::vector<std::string> &target);
+
 #endif

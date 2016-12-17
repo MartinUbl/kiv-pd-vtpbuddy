@@ -24,4 +24,11 @@ enum ConfigurationGeneratorType
     CONFIGURATION_TYPE_VLANDB   = 1, // configured from "vlan database" mode
 };
 
+// enumerator of supported versioning tools
+enum VersioningTool
+{
+    VERSIONING_SVN  = 0,        // subversion
+    VERSIONING_GIT  = 1,        // git
+};
+
 #endif

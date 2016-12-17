@@ -19,6 +19,9 @@ void ConfigMgr::InitDefaults()
     _InitConfigStringValue(CONF_PRIM_DOMAIN, "domain", "NOT_CONFIGURED");
     _InitConfigStringValue(CONF_PRIM_PASSWORD, "password", "");
     _InitConfigEnumValue(CONF_VLAN_CONF_TYPE, "vlan_conf_type", CONFIGURATION_TYPE_VLANDB);
+    _InitConfigEnumValue(CONF_VERSION_TOOL, "versioning_tool", VERSIONING_SVN);
+    _InitConfigStringValue(CONF_DATA_LOCATION, "vlan_conf_location", "/var/lib/vtpbuddy/data/");
+    _InitConfigStringValue(CONF_VERSION_REPO, "repository_remote", "/var/lib/vtpbuddy/repository/");
 }
 
 int64_t ConfigMgr::_ParseEnumValue(ConfigOpts opt, std::string str)
@@ -45,6 +48,13 @@ int64_t ConfigMgr::_ParseEnumValue(ConfigOpts opt, std::string str)
             return OM_CLIENT;
         else if (str == "transparent")
             return OM_TRANSPARENT;
+    }
+    else if (opt == CONF_VERSION_TOOL)
+    {
+        if (str == "svn")
+            return VERSIONING_SVN;
+        else if (str == "git")
+            return VERSIONING_GIT;
     }
 
     return -1;

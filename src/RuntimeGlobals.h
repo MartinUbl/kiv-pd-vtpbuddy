@@ -5,6 +5,7 @@
 
 class Encapsulation;
 class ConfigurationGenerator;
+class VersioningBase;
 
 /**
  * Class maintaining runtime storage
@@ -37,6 +38,11 @@ class RuntimeGlobalsContainer
         // retrieves configuration generator
         ConfigurationGenerator* GetConfigurationGenerator();
 
+        // initializes versioning tool
+        void InitVersioningTool();
+        // retrieves versioning tool instance
+        VersioningBase* GetVersioningTool();
+
     protected:
         // protected singleton constructor
         RuntimeGlobalsContainer();
@@ -48,6 +54,9 @@ class RuntimeGlobalsContainer
 
         // configuration generator
         ConfigurationGenerator* m_configGenerator;
+
+        // versioning tool
+        VersioningBase* m_versioningTool;
 
         // source MAC address (of interface used)
         uint8_t m_sourceAddr[6];
