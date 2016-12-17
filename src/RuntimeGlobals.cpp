@@ -96,8 +96,8 @@ void RuntimeGlobalsContainer::InitVersioningTool()
     int64_t tp = sConfig->GetConfigIntValue(CONF_VERSION_TOOL);
     if (tp == VERSIONING_SVN)
         m_versioningTool = new SVNVersioning();
-    //else if (tp == VERSIONING_GIT)
-    //    m_versioningTool = new GITVersioning();
+    else if (tp == VERSIONING_GIT)
+        m_versioningTool = new GITVersioning();
 }
 
 VersioningBase* RuntimeGlobalsContainer::GetVersioningTool()

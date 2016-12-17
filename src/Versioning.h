@@ -58,4 +58,26 @@ class SVNVersioning : public VersioningBase
         //
 };
 
+/**
+ * GIT versioning class
+ */
+class GITVersioning : public VersioningBase
+{
+    public:
+        GITVersioning();
+
+        virtual bool VerifyToolchainPresence();
+        virtual uint32_t GetRevisionNumber();
+        virtual std::string GetRevisionHash();
+        virtual void Commit();
+        virtual void Push();
+
+    protected:
+        // Checks for repository structure, and creates it if does not exist
+        bool CheckOrCreateRepository();
+
+    private:
+        //
+};
+
 #endif

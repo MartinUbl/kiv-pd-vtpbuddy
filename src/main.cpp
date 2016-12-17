@@ -119,6 +119,13 @@ int main(int argc, char** argv)
 
     sRuntimeGlobals->InitializeRuntime();
 
+    VersioningBase* verb = sRuntimeGlobals->GetVersioningTool();
+    if (!verb || !verb->VerifyToolchainPresence())
+    {
+        std::cout << "Selected versioning toolchain was not found in the system, or is not supported!" << std::endl;
+        return 1;
+    }
+
     sNetwork->StartListener();
 
     std::cout << "Primary domain:    " << sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN) << std::endl;
@@ -133,12 +140,6 @@ int main(int argc, char** argv)
     else if (sConfig->GetConfigIntValue(CONF_MODE) == OM_TRANSPARENT)
         std::cout << "Mode:              transparent" << std::endl;
 
-    VersioningBase* verb = sRuntimeGlobals->GetVersioningTool();
-    if (!verb || !verb->VerifyToolchainPresence())
-    {
-        std::cout << "Selected versioning toolchain was not found in the system, or is not supported!" << std::endl;
-        return 1;
-    }
     std::cout << "Database revision: " << verb->GetRevisionNumber() << std::endl;
 
     // create primary domain; this will also load the domain from file, if already stored

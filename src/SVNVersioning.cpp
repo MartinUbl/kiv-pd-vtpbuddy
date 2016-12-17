@@ -99,6 +99,13 @@ bool SVNVersioning::CheckOrCreateRepository()
     std::string localPath = SanitizePath(sConfig->GetConfigStringValue(CONF_DATA_LOCATION));
     std::string remotePath = sConfig->GetConfigStringValue(CONF_VERSION_REPO);
 
+    // SVN repository needs to have some upstream
+    if (remotePath.length() == 0)
+    {
+        std::cerr << "No remote repository specified, versioning is not possible! Please, select another versioning tool or specify remote" << std::endl;
+        return false;
+    }
+
     if (remotePath[remotePath.length() - 1] != '/')
         remotePath += "/";
 
