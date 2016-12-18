@@ -20,7 +20,10 @@ FILE(GLOB tmp_src
 ADD_EXECUTABLE(vtpbuddy ${tmp_src})
 
 INSTALL(TARGETS vtpbuddy DESTINATION /usr/sbin)
-INSTALL(FILES misc/vtpbuddy.cfg DESTINATION /etc/vtpbuddy)
+INSTALL(FILES misc/vtpbuddy.cfg DESTINATION /etc/)
+INSTALL(FILES misc/vtpbuddy.service DESTINATION /etc/systemd/system/)
+INSTALL(DIRECTORY DESTINATION /var/lib/vtpbuddy)
+INSTALL(CODE "execute_process(COMMAND systemctl enable /etc/systemd/system/vtpbuddy.service)")
 
 TARGET_LINK_LIBRARIES(vtpbuddy pthread crypto ssl)
 
