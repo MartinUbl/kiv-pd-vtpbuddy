@@ -17,9 +17,24 @@ FILE(GLOB tmp_src
 	src/*.cpp
 )
 
-ADD_EXECUTABLE(kiv-pd-vtpbuddy ${tmp_src})
+ADD_EXECUTABLE(vtpbuddy ${tmp_src})
 
-INSTALL(TARGETS kiv-pd-vtpbuddy DESTINATION /usr/sbin)
+INSTALL(TARGETS vtpbuddy DESTINATION /usr/sbin)
 INSTALL(FILES misc/vtpbuddy.cfg DESTINATION /etc/vtpbuddy)
 
-TARGET_LINK_LIBRARIES(kiv-pd-vtpbuddy pthread crypto ssl)
+TARGET_LINK_LIBRARIES(vtpbuddy pthread crypto ssl)
+
+
+
+FILE(GLOB ctl_src
+	ctl-src/*.h
+	ctl-src/*.hpp
+	ctl-src/*.c
+	ctl-src/*.cpp
+)
+
+ADD_EXECUTABLE(vtpbuddyctl ${ctl_src})
+
+INSTALL(TARGETS vtpbuddyctl DESTINATION /usr/sbin)
+
+TARGET_LINK_LIBRARIES(vtpbuddyctl pthread crypto ssl)

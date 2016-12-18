@@ -22,6 +22,8 @@ enum ConfigOpts
     CONF_VERSION_TOOL   = 7,
     CONF_DATA_LOCATION  = 8,
     CONF_VERSION_REPO   = 9,
+    CONF_CTL_BIND_IP    = 10,
+    CONF_CTL_PORT       = 11,
     MAX_CONF_OPT
 };
 

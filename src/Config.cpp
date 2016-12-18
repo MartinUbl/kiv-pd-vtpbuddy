@@ -22,6 +22,8 @@ void ConfigMgr::InitDefaults()
     _InitConfigEnumValue(CONF_VERSION_TOOL, "versioning_tool", VERSIONING_SVN);
     _InitConfigStringValue(CONF_DATA_LOCATION, "vlan_conf_location", "/var/lib/vtpbuddy/data/");
     _InitConfigStringValue(CONF_VERSION_REPO, "repository_remote", "file:///var/lib/vtpbuddy/repository/");
+    _InitConfigStringValue(CONF_CTL_BIND_IP, "ctl_bind", "127.0.0.1");
+    _InitConfigIntValue(CONF_CTL_PORT, "ctl_port", 3460);
 }
 
 int64_t ConfigMgr::_ParseEnumValue(ConfigOpts opt, std::string str)
