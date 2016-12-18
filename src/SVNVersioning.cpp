@@ -184,3 +184,35 @@ bool SVNVersioning::CheckOrCreateRepository()
 
     return true;
 }
+
+std::string SVNVersioning::GetFileFromVersion(const char* filename, size_t history, bool relative)
+{
+    std::string localPath = SanitizePath(sConfig->GetConfigStringValue(CONF_DATA_LOCATION));
+
+    uint32_t rev = GetRevisionNumber();
+
+    if (relative)
+    {
+        if (history >= rev)
+            return "ERR:NOREV";
+
+        rev -= history;
+    }
+    else
+    {
+        if (history >= rev)
+            return "ERR:NOREV";
+
+        rev = history;
+    }
+
+    const char* argv[] = { "svn", "cat", "-r", std::to_string(rev).c_str(), (localPath + filename).c_str(), nullptr };
+
+    int retcode;
+    std::string res = ExecAndGetOutput(argv[0], argv, retcode);
+
+    if (retcode != 0)
+        return "ERR:NOFILE";
+
+    return res;
+}

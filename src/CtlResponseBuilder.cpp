@@ -4,6 +4,9 @@
 #include "DomainMgr.h"
 #include "VLAN.h"
 
+#include "RuntimeGlobals.h"
+#include "Versioning.h"
+
 namespace CtlResponseBuilder
 {
 
@@ -74,4 +77,12 @@ namespace CtlResponseBuilder
         return liststr;
     }
 
+    std::string FileVersion(const char* filename, size_t versionMinus, bool relative)
+    {
+        VersioningBase* vbase = sRuntimeGlobals->GetVersioningTool();
+        if (!vbase)
+            return "ERR:UNKVERSIONING";
+
+        return vbase->GetFileFromVersion(filename, versionMinus, relative);
+    }
 }

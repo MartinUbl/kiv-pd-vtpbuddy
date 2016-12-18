@@ -22,6 +22,9 @@ class VersioningBase
         // retrieves revision hash
         virtual std::string GetRevisionHash() = 0;
 
+        // retrieves specific file contents from history (minus <history> commits)
+        virtual std::string GetFileFromVersion(const char* filename, size_t history = 0, bool relative = false) = 0;
+
         // creates commit
         virtual void Commit() = 0;
 
@@ -49,6 +52,7 @@ class SVNVersioning : public VersioningBase
         virtual std::string GetRevisionHash();
         virtual void Commit();
         virtual void Push();
+        virtual std::string GetFileFromVersion(const char* filename, size_t history = 0, bool relative = false);
 
     protected:
         // Checks for repository structure, and creates it if does not exist
@@ -71,6 +75,7 @@ class GITVersioning : public VersioningBase
         virtual std::string GetRevisionHash();
         virtual void Commit();
         virtual void Push();
+        virtual std::string GetFileFromVersion(const char* filename, size_t history = 0, bool relative = false);
 
     protected:
         // Checks for repository structure, and creates it if does not exist

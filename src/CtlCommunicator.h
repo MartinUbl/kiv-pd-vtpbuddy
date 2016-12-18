@@ -43,6 +43,9 @@ namespace CtlResponseBuilder
     std::string ListDomains();
     // retrieves formatted string - list of VLANs within domain
     std::string ListVLANs(const char* domain);
+
+    // retrieves file contents from specified version in history (revision), relative = add to revision number (false for absolute rev)
+    std::string FileVersion(const char* filename, size_t versionMinus, bool relative);
 }
 
 #endif

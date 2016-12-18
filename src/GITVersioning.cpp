@@ -171,3 +171,40 @@ bool GITVersioning::CheckOrCreateRepository()
 
     return true;
 }
+
+std::string GITVersioning::GetFileFromVersion(const char* filename, size_t history, bool relative)
+{
+    std::string localPath = SanitizePath(sConfig->GetConfigStringValue(CONF_DATA_LOCATION));
+    std::string gitParam = "--git-dir="+localPath+".git";
+    std::string dirParam = "--work-tree="+localPath+"";
+
+    uint32_t rev = GetRevisionNumber();
+
+    if (relative)
+    {
+        if (history >= rev)
+            return "ERR:NOREV";
+
+        rev = history;
+    }
+    else
+    {
+        if (history >= rev)
+            return "ERR:NOREV";
+
+        rev -= history;
+    }
+
+    std::string revstr = "HEAD~";
+    revstr += std::to_string(rev);
+
+    const char* argv[] = { "git", gitParam.c_str(), dirParam.c_str(), "show", (revstr + ":" + filename).c_str(), nullptr };
+
+    int retcode;
+    std::string res = ExecAndGetOutput(argv[0], argv, retcode);
+
+    if (retcode != 0)
+        return "ERR:NOFILE";
+
+    return res;
+}

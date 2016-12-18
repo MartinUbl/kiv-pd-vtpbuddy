@@ -1,6 +1,7 @@
 #include "general.h"
 #include "CtlCommunicator.h"
 #include "Config.h"
+#include "Shared.h"
 
 #include <set>
 
@@ -190,16 +191,25 @@ void CtlCommunicator::_ProcessRequest(int sock, std::string request)
         {
             // tokens[1] = domain name
 
-            // TODO: implement
-            _SendResponse(sock, "ERR:NOTIMPLEMENTED");
+            _SendResponse(sock, CtlResponseBuilder::FileVersion(tokens[1].c_str(), 0, true));
         }
         else if (tokens.size() == 3)
         {
             // tokens[1] = domain name
-            // tokens[2] = revision (or specifier)
+            // tokens[2] = revision (positive = absolute revision number, negative or zero = relative revision specifier)
 
-            // TODO: implement
-            _SendResponse(sock, "ERR:NOTIMPLEMENTED");
+            try
+            {
+                int64_t revParsed = parseLong_ex(tokens[2].c_str());
+                if (revParsed > 0)
+                    _SendResponse(sock, CtlResponseBuilder::FileVersion(tokens[1].c_str(), (size_t)revParsed, false));
+                else
+                    _SendResponse(sock, CtlResponseBuilder::FileVersion(tokens[1].c_str(), (size_t)(-revParsed), true));
+            }
+            catch (std::invalid_argument &ex)
+            {
+                _SendResponse(sock, "ERR:PARAMETERFAIL");
+            }
         }
         else
             _SendResponse(sock, "ERR:PARAMETERS");
