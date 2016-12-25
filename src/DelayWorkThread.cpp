@@ -70,11 +70,9 @@ void DelayWorker::_Run()
         switch (wqitem->type)
         {
             case DELAY_WORK_SAVE_DOMAIN:
-                std::cout << "Saving domain " << wqitem->domain.c_str() << std::endl;
                 SaveDomain(wqitem);
                 break;
             case DELAY_WORK_PUSH:
-                std::cout << "Pushing to repository" << std::endl;
                 PushRepository(wqitem);
                 break;
             default:
