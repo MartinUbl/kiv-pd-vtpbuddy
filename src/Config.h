@@ -24,6 +24,7 @@ enum ConfigOpts
     CONF_VERSION_REPO   = 9,
     CONF_CTL_BIND_IP    = 10,
     CONF_CTL_PORT       = 11,
+    CONF_SUMMARY_PERIOD = 12,
     MAX_CONF_OPT
 };
 

@@ -24,6 +24,7 @@ void ConfigMgr::InitDefaults()
     _InitConfigStringValue(CONF_VERSION_REPO, "repository_remote", "file:///var/lib/vtpbuddy/repository/");
     _InitConfigStringValue(CONF_CTL_BIND_IP, "ctl_bind", "127.0.0.1");
     _InitConfigIntValue(CONF_CTL_PORT, "ctl_port", 3460);
+    _InitConfigIntValue(CONF_SUMMARY_PERIOD, "summary_period", 300);
 }
 
 int64_t ConfigMgr::_ParseEnumValue(ConfigOpts opt, std::string str)

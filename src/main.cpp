@@ -18,7 +18,11 @@ void signal_handler(int signo)
 {
     std::cout << std::endl << "Exiting..." << std::endl;
 
+    sDomainMgr->Finalize();
+
     sNetwork->Terminate();
+
+    sDelayWorker->Finalize();
 
     exit(0);
 }
@@ -83,6 +87,9 @@ int main(int argc, char** argv)
     VTPDomain* primaryDomain = sDomainMgr->CreateDomain(sConfig->GetConfigStringValue(CONF_PRIM_DOMAIN), sConfig->GetConfigStringValue(CONF_PRIM_PASSWORD));
     primaryDomain->Startup();
 
+    if (!sDomainMgr->Init())
+        std::cerr << "Could not initialize periodic summary advertisement sender; application will not advertise its configuration automatically" << std::endl;
+
     if (!sCtlComm->Init())
     {
         std::cerr << "Could not initialize control communicator!" << std::endl;
@@ -90,6 +97,8 @@ int main(int argc, char** argv)
     }
 
     sCtlComm->Run();
+
+    sDomainMgr->Finalize();
 
     sNetwork->Terminate();
 

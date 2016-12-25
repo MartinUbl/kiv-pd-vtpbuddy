@@ -36,7 +36,10 @@ void VTPDomain::Startup()
     // if we are in client mode, let's send advertisement request so the other devices would send us their configuration
     if (sConfig->GetConfigIntValue(CONF_MODE) == OM_CLIENT)
         SendAdvertRequest(m_currentRevision);
-    SendSummaryAdvert(0);
+
+    // server and client also sends summary advertisements about their current configuration
+    if (sConfig->GetConfigIntValue(CONF_MODE) != OM_TRANSPARENT)
+        SendSummaryAdvert(0);
 }
 
 const char* VTPDomain::GetName() const
