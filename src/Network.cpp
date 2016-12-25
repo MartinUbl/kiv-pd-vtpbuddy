@@ -62,8 +62,28 @@ bool VTPNetwork::InitSocket(const char* iface)
         return false;
     }
 
+    memset(&m_ifopts, 0, sizeof(m_ifopts));
+    snprintf(m_ifopts.ifr_name, sizeof(m_ifopts.ifr_name), iface);
+    if (ioctl(m_socket, SIOCGIFINDEX, &m_ifopts) < 0)
+    {
+        //
+    }
+
+    int ifIndex = m_ifopts.ifr_ifindex;
+
+    struct sockaddr_ll sll;
+    memset(&sll, 0, sizeof(sockaddr_ll));
+    sll.sll_family = AF_PACKET;
+    sll.sll_ifindex = m_ifopts.ifr_ifindex;
+    sll.sll_protocol = htons(ETH_P_ALL);
+    sll.sll_pkttype = PACKET_HOST;
+    if ((bind(m_socket , (struct sockaddr*)&sll , sizeof(sll))) < 0)
+    {
+        std::cerr << "Could not bind to interface " << iface << ", errno = " << errno << std::endl;
+    }
+
     // bind to specific device (interface), so we would not receive excessive amount of data
-    if (setsockopt(m_socket, SOL_SOCKET, SO_BINDTODEVICE, iface, strlen(iface)) != 0)
+    if (setsockopt(m_socket, SOL_SOCKET, SO_BINDTODEVICE, (void*)&m_ifopts, sizeof(m_ifopts)) != 0)
     {
         std::cerr << "Could not bind to interface " << iface << ", errno = " << errno << std::endl;
         return false;
@@ -88,6 +108,13 @@ bool VTPNetwork::InitSocket(const char* iface)
         return false;
     }
 
+    struct packet_mreq mreq;
+    mreq.mr_ifindex = ifIndex;
+    mreq.mr_type = PACKET_MR_PROMISC;
+    mreq.mr_alen = ETH_ALEN;
+    memcpy(mreq.mr_address, (uint8_t*)m_ifopts.ifr_hwaddr.sa_data, ETH_ALEN);
+    setsockopt(m_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof(packet_mreq));
+
     sRuntimeGlobals->SetSourceMAC((uint8_t*)m_ifopts.ifr_hwaddr.sa_data);
 
     // set some implicit IP in case the interface doesn't have assigned one
@@ -100,24 +127,34 @@ bool VTPNetwork::InitSocket(const char* iface)
 
     sRuntimeGlobals->SetSourceIP((uint32_t)addr.s_addr);
 
+    // set base timeout
+    struct timeval tv;
+    tv.tv_sec = 1;
+    tv.tv_usec = 1;
+    setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
+
     return true;
 }
 
 void VTPNetwork::_ListenerRun()
 {
-    int res;
+    int res, res2;
+    struct sockaddr_ll addr;
+    socklen_t addr_len = sizeof(addr);
 
     // loop while we want it
     while (m_listenThreadRunning)
     {
-        res = recvfrom(m_socket, m_netBuffer, NET_BUFFER_SIZE, 0, nullptr, nullptr);
+        res = recvfrom(m_socket, m_netBuffer, NET_BUFFER_SIZE, 0, (struct sockaddr*)&addr, &addr_len);
         if (res <= 0 && errno == EAGAIN)
             continue;
         if (res < 0)
         {
             std::cerr << "recvfrom(): failed, errno = " << errno << std::endl;
-            // break;
+            break; // break, this may be fatal error, and we cannot risk filling syslog with infinite loop generated messages
         }
+        else if (addr.sll_pkttype == PACKET_OUTGOING)
+            continue;
 
         DispatchReceivedPacket((uint8_t*)m_netBuffer, res);
     }
@@ -146,12 +183,12 @@ void VTPNetwork::Terminate()
 void VTPNetwork::SendPreparedPacket(PreparedPacket* pkt)
 {
     Encapsulation* encaps = sRuntimeGlobals->GetOutputEncapsulation(pkt->tagged);
-    size_t totalLen = encaps->GetEncapsulationSize() + sizeof(VTPHeader) + pkt->data_len;
+    const size_t totalLen = encaps->GetEncapsulationSize() + sizeof(VTPHeader) + pkt->data_len;
 
     uint8_t* outBuffer = new uint8_t[totalLen];
 
     // set total frame length (the encapsulating header does not count)
-    encaps->SetFrameLength(totalLen - encaps->GetEncapsulationSize());
+    encaps->SetFrameLength(totalLen - encaps->GetEncapsulationSize() + 8);
     encaps->AppendEncapsData(outBuffer);
 
     size_t offset = encaps->GetEncapsulationSize();
@@ -167,6 +204,7 @@ void VTPNetwork::SendPreparedPacket(PreparedPacket* pkt)
     if (ioctl(m_socket, SIOCGIFINDEX, &m_ifopts) < 0)
         std::cerr << "Error when trying to retrieve interface index; is interface still available? errno = " << errno << std::endl;
 
+    saddr.sll_family = AF_PACKET;
     saddr.sll_ifindex = m_ifopts.ifr_ifindex;
     saddr.sll_halen = ETH_ALEN;
 

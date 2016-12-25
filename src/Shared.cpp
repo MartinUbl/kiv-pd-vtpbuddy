@@ -45,7 +45,7 @@ void parseIPv4_ex(const char* input, uint8_t* target)
         if (orig < 0 || orig > 255)
             throw std::invalid_argument(input);
 
-        target[i++] = (uint8_t)orig;
+        target[3 - (i++)] = (uint8_t)orig;
     }
 
     if (i != 4)

@@ -6,6 +6,7 @@
 #include "Network.h"
 
 #include <arpa/inet.h>
+#include <errno.h>
 
 static uint16_t _ReadU16(uint8_t* buffer, size_t offset)
 {
@@ -73,7 +74,7 @@ template<> void ToHostEndianity<SubsetVLANInfoBody>(SubsetVLANInfoBody* pkt)
     pkt->index80210 = ntohl(pkt->index80210);
 }
 
-void DispatchReceivedPacket(uint8_t* buffer, size_t len)
+size_t DispatchReceivedPacket(uint8_t* buffer, size_t len)
 {
     uint8_t msg_type, version;
 
@@ -89,10 +90,10 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
     else if (_ReadU16(buffer, SNAP_TAGGED_OFFSET) == SNAP_DSAP_SSAP_IDENTIFIER)
         base_offset = SNAP_TAGGED_OFFSET;
     else
-        return;
+        return 0;
 
     if (_ReadU16(buffer, base_offset + VTP_ID_OFFSET) != VTP_IDENTIFIER)
-        return;
+        return 0;
 
     VTPHeader* hdr = (VTPHeader*)&buffer[base_offset + VTP_VERSION_OFFSET];
 
@@ -100,10 +101,21 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
     std::string domName((const char*)hdr->domain_name, (size_t)hdr->domain_len);
     VTPDomain* domain = sDomainMgr->GetDomainByName(domName.c_str());
     if (!domain)
-        return;
+        return 0;
 
     // frame length is stored in previous 2 bytes (when using 802.1Q, frame header "tail" is the same as 802.3 Ethernet)
     uint16_t frameLength = _ReadU16(buffer, base_offset - 2);
+
+    uint16_t offsetCut = base_offset + 2; // add SNAP len
+    // this would mean, that length field does not match the real received length
+    if (frameLength + offsetCut > len)
+    {
+        // for now, just nullify next bytes (we may be sure the buffer is long enough)
+        for (size_t ii = len; ii < frameLength + offsetCut; ii++)
+            buffer[ii] = 0;
+
+        //return (frameLength + offsetCut - len);
+    }
 
     // disambiguate using VTP message code
     switch (hdr->code)
@@ -148,4 +160,6 @@ void DispatchReceivedPacket(uint8_t* buffer, size_t len)
             std::cerr << "Received unknown VTP packet type (" << (int)hdr->code << "), not handling." << std::endl;
             break;
     }
+
+    return 0;
 }

@@ -5,6 +5,7 @@
 #include "VLAN.h"
 
 class ConfigurationGenerator;
+struct PreparedPacket;
 
 typedef std::map<uint16_t, VLANRecord*> VLANMap;
 
@@ -46,13 +47,20 @@ class VTPDomain
 
         // sends summary advert
         void SendSummaryAdvert(uint8_t followers);
-        // sends an advert request packet
+        // sends an advert request frame
         void SendAdvertRequest(uint32_t start_revision);
+        // prepares all subset advert frames into target vector
+        void PrepareAllSubsetAdverts(std::vector<PreparedPacket*> &target);
+        // sends prepared subset adverts
+        void SendPreparedSubsetAdverts(std::vector<PreparedPacket*> &target);
         
         // saves stored VLANs into file
         void SaveToFile();
         // loads stored VLANs from file
         void LoadFromFile();
+
+        // Fills vector of bytes with VLAN info block
+        static void FillVLANInfoBlock(VLANRecord* vlan, std::vector<uint8_t> &target);
 
     protected:
         // reduces VLAN set - vlanSet is set of VLANs to be preserved
