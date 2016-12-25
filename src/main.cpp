@@ -7,6 +7,7 @@
 #include "Versioning.h"
 #include "Shared.h"
 #include "CtlCommunicator.h"
+#include "DelayWorkThread.h"
 
 #include <sstream>
 #include <signal.h>
@@ -40,6 +41,13 @@ int main(int argc, char** argv)
     {
         std::cerr << "Invalid path configured as data location!" << std::endl;
         return 3;
+    }
+
+    // initialize delay worker
+    if (!sDelayWorker->Init())
+    {
+        std::cerr << "Could not spawn delay worker" << std::endl;
+        return 4;
     }
 
     // initialize network
@@ -84,6 +92,8 @@ int main(int argc, char** argv)
     sCtlComm->Run();
 
     sNetwork->Terminate();
+
+    sDelayWorker->Finalize();
 
     return 0;
 }

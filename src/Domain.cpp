@@ -10,8 +10,9 @@
 #include "RuntimeGlobals.h"
 #include "Shared.h"
 #include "Versioning.h"
-#include <arpa/inet.h>
+#include "DelayWorkThread.h"
 
+#include <arpa/inet.h>
 #include <iomanip>
 #include <openssl/md5.h>
 
@@ -192,15 +193,11 @@ void VTPDomain::HandleSubsetAdvert(SubsetAdvertPacketBody* pkt, uint8_t sequence
         // update local revision number
         m_currentRevision = pkt->revision;
 
-        // save to file now
-        // TODO: make this periodic?
-        SaveToFile();
+        // save to file (use delayed worker)
+        sDelayWorker->QueueRequest(DELAY_WORK_SAVE_DOMAIN, m_name.c_str());
 
-        // commit and push changes
-        // TODO: delegate push to a thread, synchronize with further pushes
-        VersioningBase* vers = sRuntimeGlobals->GetVersioningTool();
-        vers->Commit();
-        vers->Push();
+        // commit and push changes (use delayed worker)
+        sDelayWorker->QueueRequest(DELAY_WORK_PUSH, m_name.c_str());
     }
 }
 
