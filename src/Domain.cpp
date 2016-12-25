@@ -113,8 +113,8 @@ void VTPDomain::_ReduceVLANSet(std::set<uint16_t> const &vlanSet)
 void VTPDomain::HandleSummaryAdvert(SummaryAdvertPacketBody* pkt, uint8_t followers)
 {
     uint8_t myDigest[VTP_MD5_LENGTH + 1];
+    // TODO: figure out MD5 digest rules for summary advertisement frame
     // this is wrong, VTP node appends domain, password, version, ... into hash
-    // TODO: figure it out
     //MD5((unsigned char*)m_password.c_str(), m_password.length(), m_passwordHash);
 
     // if received revision is higher than our revision..
@@ -229,6 +229,8 @@ void VTPDomain::SendSummaryAdvert(uint8_t followers)
     memcpy(&bd->updater_id, m_updaterIdentity, 4);
 
     // TODO: figure out, what is meant by following fields present in Summary Advert frames sent by Cisco devices
+    // this dump appears to be same no matter what changes are made to VLAN settings; may be related to interface
+    // configuration, STP configuration, etc.
     // begin of mysterious byte dump
     uint8_t* trgt = reqpkt->data + sizeof(SummaryAdvertPacketBody);
     trgt[0] = 0;
@@ -260,7 +262,7 @@ void VTPDomain::SendAdvertRequest(uint32_t start_revision)
 
 void VTPDomain::PrepareAllSubsetAdverts(std::vector<PreparedPacket*> &target)
 {
-    const size_t maxLen = 1200; // TODO: find proper limit
+    const size_t maxLen = 1200; // TODO: find proper limit; configurable?
     const size_t overhead = sizeof(SubsetAdvertPacketBody) - 1;
 
     if (m_vlans.size() == 0)
@@ -350,7 +352,7 @@ void VTPDomain::FillVLANInfoBlock(VLANRecord* vlan, std::vector<uint8_t> &target
     for (std::pair<uint16_t, uint16_t> ftr : vlan->features)
     {
         VEC_ADD_1B(ftr.first);
-        VEC_ADD_1B(0x01);           // TODO: verify this value for sure, it appears to be correct
+        VEC_ADD_1B(0x01);           // TODO: verify this value for sure, it appears to be constant and correct
         VEC_ADD_2B(ftr.second);
     }
 

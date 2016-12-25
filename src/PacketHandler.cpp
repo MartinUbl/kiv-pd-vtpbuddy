@@ -114,6 +114,9 @@ size_t DispatchReceivedPacket(uint8_t* buffer, size_t len)
         for (size_t ii = len; ii < frameLength + offsetCut; ii++)
             buffer[ii] = 0;
 
+        // for future, this should be considered an error, but then several bytes are unrecoverably lost in some kind of
+        // black hole - even tcpdump does not dump them properly and considers missing bytes to be all zero
+
         //return (frameLength + offsetCut - len);
     }
 

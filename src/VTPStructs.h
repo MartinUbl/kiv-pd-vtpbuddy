@@ -6,7 +6,6 @@
 #define SNAP_NOT_TAGGED_OFFSET 14
 #define SNAP_TAGGED_OFFSET 18
 
-// TODO: find proper values
 #define VTP_ID_OFFSET 6
 #define VTP_VERSION_OFFSET 8
 #define VTP_MSGTYPE_OFFSET 9

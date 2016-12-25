@@ -23,7 +23,8 @@ PreparedPacket* PreparedPacket::Prepare(uint8_t _vtp_code, size_t _data_len, std
 {
     PreparedPacket* pkt = new PreparedPacket();
 
-    // TODO: figure out tagging rules
+    // TODO: use tagged frame if requested by config - probably won't be used in most end-device cases, but
+    // in case of i.e. OpenWRT-based node, this may be needed
     pkt->tagged = false;
 
     pkt->header.version = sConfig->GetConfigIntValue(CONF_VTP_VERSION);
@@ -184,6 +185,8 @@ void VTPNetwork::SendPreparedPacket(PreparedPacket* pkt)
 {
     Encapsulation* encaps = sRuntimeGlobals->GetOutputEncapsulation(pkt->tagged);
     const size_t totalLen = encaps->GetEncapsulationSize() + sizeof(VTPHeader) + pkt->data_len;
+
+    // TODO: if tagged frame, call encaps->SetVLANId to set value of tag field
 
     uint8_t* outBuffer = new uint8_t[totalLen];
 
