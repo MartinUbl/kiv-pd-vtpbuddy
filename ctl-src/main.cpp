@@ -13,7 +13,8 @@ int main(int argc, char** argv)
     // at least one parameter is needed
     if (argc < 2)
     {
-        std::cerr << "Not enough parameters" << std::endl;
+        std::cerr << "Not enough parameters." << std::endl
+                  << "Usage: " << argv[0] << " <command>" << std::endl;
         return 1;
     }
 
